@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Interaction</title>
+</head>
+<body>
+    <h1>Article Interaction</h1>
+    <div id="article">
+        <h2 id="articleTitle">Article Title</h2>
+        <p id="articleContent">Article Content</p>
+        <button id="likeButton">Like</button>
+        <span id="likeCount">0</span> Likes
+    </div>
+    
+    <h2>Add a Comment</h2>
+    <form id="addCommentForm">
+        <label for="comment">Comment:</label>
+        <textarea id="comment" name="comment" required></textarea><br><br>
+        <button type="submit">Add Comment</button>
+    </form>
+
+    <div id="comments">
+        <h2>Comments</h2>
+        <ul id="commentList">
+            <!-- Comments will be appended here -->
+        </ul>
+    </div>
+
+    <script>
+        const articleId = 'YOUR_ARTICLE_ID_HERE'; // Replace with the actual article ID
+
+        document.getElementById('likeButton').addEventListener('click', async () => {
+            const response = await fetch(`/api/betta/articles/${articleId}/like`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                document.getElementById('likeCount').textContent = result.post.likes.length;
+            } else {
+                alert('Failed to like the article.');
+            }
+        });
+
+        document.getElementById('addCommentForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const comment = document.getElementById('comment').value;
+
+            const response = await fetch(`/api/betta/articles/${articleId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ comment })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                const commentList = document.getElementById('commentList');
+                commentList.innerHTML = ''; // Clear the list before updating
+                result.post.comments.forEach(comment => {
+                    const li = document.createElement('li');
+                    li.textContent = `${comment.postedBy.name}: ${comment.text}`;
+                    commentList.appendChild(li);
+                });
+                document.getElementById('comment').value = ''; // Clear the comment input
+            } else {
+                alert('Failed to add comment.');
+            }
+        });
+
+        // Initial fetch to load the article data
+        async function fetchArticle() {
+            const response = await fetch(`/api/betta/articles/${articleId}`);
+            if (response.ok) {
+                const article = await response.json();
+                document.getElementById('articleTitle').textContent = article.title;
+                document.getElementById('articleContent').textContent = article.content;
+                document.getElementById('likeCount').textContent = article.likes.length;
+                const commentList = document.getElementById('commentList');
+                commentList.innerHTML = '';
+                article.comments.forEach(comment => {
+                    const li = document.createElement('li');
+                    li.textContent = `${comment.postedBy.name}: ${comment.text}`;
+                    commentList.appendChild(li);
+                });
+            } else {
+                alert('Failed to load article.');
+            }
+        }
+
+        fetchArticle();
+    </script>
+</body>
+</html>

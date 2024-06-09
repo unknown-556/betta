@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Page</title>
+    <style>
+        .article {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the Profile Page</h1>
+    <p>This is a page that can only be accessed after logging in.</p>
+    <ul>
+        <li>Name: <span id="name"></span></li>
+        <li>Email: <span id="email"></span></li>
+    </ul>
+
+    <h2>Articles</h2>
+    <div id="articleList"></div>
+
+    <script>
+        async function checkRole() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+                const response = await fetch('/api/betta/get/profile', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch profile data');
+                }
+
+                const User = await response.json();
+                const user = User.user || [];
+
+                // if (user && user.role !== 'writer') {
+                //     alert('Access denied. Only writers can access this page.');
+                //     window.location.href = '/readerProfile.html';
+                // }
+
+                // return user;
+           
+        }
+
+        async function profile() {
+            const user = await checkRole();
+
+            if (user && user.user) {
+                localStorage.setItem('details', JSON.stringify(user.user));
+                document.getElementById('name').textContent = user.user.name;
+                document.getElementById('email').textContent = user.user.email;
+            } else {
+                document.body.innerHTML = `<p>${user.error || 'Failed to load profile data'}</p>`;
+            }
+        }
+
+        async function fetchAndRenderArticles() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('You are not logged in.');
+                window.location.href = '/login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/betta/article/articles', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch articles');
+                }
+
+                const data = await response.json();
+                const articles = data.articles || [];
+
+                if (articles.length > 0) {
+                    localStorage.setItem('articles', JSON.stringify(articles));
+                    renderArticles(articles);
+                } else {
+                    document.getElementById('articleList').innerHTML = '<p>No articles available.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching articles:', error.message);
+                document.getElementById('articleList').innerHTML = '<p>Failed to fetch articles. Please try again later.</p>';
+            }
+        }
+
+        function renderArticles(articles) {
+            const articleList = document.getElementById('articleList');
+            articleList.innerHTML = ''; 
+
+            articles.forEach(article => {
+                const articleDiv = document.createElement('div');
+                articleDiv.classList.add('article');
+                articleDiv.innerHTML = `
+                    <h2 id="title-${article._id}">${article.title}</h2>
+                    <p id="content-${article._id}">${article.content}</p>
+                    <p id="postedBy-${article._id}">Posted by: ${article.postedBy || 'Unknown'}</p>
+                    <p id="createdAt-${article._id}">Created at: ${new Date(article.createdAt).toLocaleString()}</p>
+                `;
+                articleList.appendChild(articleDiv);
+
+                // Store individual article details in local storage
+                localStorage.setItem(`article-${article._id}`, JSON.stringify(article));
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            profile();
+            fetchAndRenderArticles();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Article</title>
+    <style>
+        /* Add your CSS styles here */
+        #fullArticleContainer {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .interaction {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="fullArticleContainer"></div>
+
+    <div class="interaction">
+        <button id="likeBtn">Like</button>
+        <span id="likeCount">0</span> Likes
+    </div>
+
+    <div class="interaction">
+        <textarea id="commentInput" rows="4" cols="50" placeholder="Add a comment..."></textarea>
+        <button id="commentBtn">Comment</button>
+    </div>
+
+    <div id="commentSection"></div>
+
+    <script>
+        async function fetchAndRenderFullArticle() {
+            // Get article ID from URL query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const Id = urlParams.get('Id');
+            console.log('Article ID:', Id);
+
+            if (!Id) {
+                console.error('Article ID not found in URL');
+                return;
+            }
+            // Fetch full article data
+            try {
+                const response = await fetch(`/api/betta/article/${Id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch article');
+                }
+                const data = await response.json();
+                const article = data.article || [];
+                renderFullArticle(article);
+            } catch (error) {
+                console.error('Error fetching article:', error.message);
+                document.getElementById('fullArticleContainer').innerHTML = '<p>Failed to fetch article. Please try again later.</p>';
+            }
+        }
+
+        function renderFullArticle(article) {
+            const fullArticleContainer = document.getElementById('fullArticleContainer');
+            fullArticleContainer.innerHTML = `
+                <h2>${article.title}</h2>
+                <p>${article.content}</p>
+                <p>Posted by: ${article.postedBy || 'Unknown'}</p>
+                <p>Created at: ${new Date(article.createdAt).toLocaleString()}</p>
+            `;
+            // Add like and comment functionality
+            const likeBtn = document.getElementById('likeBtn');
+            const likeCount = document.getElementById('likeCount');
+            const commentInput = document.getElementById('commentInput');
+            const commentBtn = document.getElementById('commentBtn');
+            const commentSection = document.getElementById('commentSection');
+
+            let likes = article.likes || [];
+            let comments = article.comments || [];
+
+            likeCount.textContent = likes.length;
+
+            likeBtn.addEventListener('click', async () => {
+                // Implement like functionality here (you need to send a request to your backend to handle the like)
+                // For example:
+                // await fetch(`/api/betta/article/${article._id}/like`, { method: 'POST' });
+                // Update the like count accordingly
+                likes.push({ userId: 'currentUserId' }); // Add dummy like for demonstration
+                likeCount.textContent = likes.length;
+            });
+
+            commentBtn.addEventListener('click', async () => {
+                const commentText = commentInput.value.trim();
+                if (commentText) {
+                    // Implement comment functionality here (you need to send a request to your backend to post the comment)
+                    // For example:
+                    // await fetch(`/api/betta/article/${article._id}/comment`, {
+                    //     method: 'POST',
+                    //     headers: {
+                    //         'Content-Type': 'application/json'
+                    //     },
+                    //     body: JSON.stringify({ comment: commentText })
+                    // });
+                    // Update the comments section accordingly
+                    const newComment = { userId: 'currentUserId', text: commentText }; // Add dummy comment for demonstration
+                    comments.push(newComment);
+                    renderComments(comments);
+                    commentInput.value = ''; // Clear input field after posting comment
+                }
+            });
+
+            renderComments(comments);
+        }
+
+        function renderComments(comments) {
+            const commentSection = document.getElementById('commentSection');
+            commentSection.innerHTML = '';
+            comments.forEach(comment => {
+                const commentDiv = document.createElement('div');
+                commentDiv.textContent = `${comment.userId}: ${comment.text}`;
+                commentSection.appendChild(commentDiv);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchAndRenderFullArticle);
+    </script>
+</body>
+</html>

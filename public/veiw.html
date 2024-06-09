@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles Page</title>
+    <style>
+        /* Add your CSS styles here */
+        .article {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            cursor: pointer; /* Add cursor pointer to indicate clickable */
+        }
+        h2 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Articles</h1>
+    <div id="articleList"></div>
+
+    <script>
+        async function fetchAndRenderArticles() {
+            // Fetch articles data
+            try {
+                const response = await fetch('/api/betta/article', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch articles');
+                }
+                const data = await response.json();
+                const articles = data.allarticles || [];
+                if (articles.length > 0) {
+                    renderArticles(articles);
+                } else {
+                    document.getElementById('articleList').innerHTML = '<p>No articles available.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching articles:', error.message);
+                document.getElementById('articleList').innerHTML = '<p>Failed to fetch articles. Please try again later.</p>';
+            }
+        }
+
+        function renderArticles(articles) {
+            const articleList = document.getElementById('articleList');
+            articleList.innerHTML = ''; 
+            articles.forEach(article => {
+                const articleDiv = document.createElement('div');
+                articleDiv.classList.add('article');
+                articleDiv.innerHTML = `
+                    <h2 id="title-${article._id}">${article.title}</h2>
+                    <p id="content-${article._id}" style="display: none;">${article.content}</p>
+                    <p id="postedBy-${article._id}">Posted by: ${article.postedBy || 'Unknown'}</p>
+                    <p id="createdAt-${article._id}">Created at: ${new Date(article.createdAt).toLocaleString()}</p>
+                `;
+                // Add click event listener to redirect to full article page
+                articleDiv.addEventListener('click', () => {
+                    window.location.href = `/fullarticle.html?Id=${article._id}`;
+                });
+                articleList.appendChild(articleDiv);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchAndRenderArticles);
+    </script>
+</body>
+</html>

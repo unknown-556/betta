@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Pages</title>
+    <style>
+        /* Add your CSS styles here */
+        .result {
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Search Pages</h1>
+    <form id="searchForm">
+        <label for="query">Search for a page:</label>
+        <input type="text" id="query" name="query" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <div class="loading" id="loading">Loading...</div>
+    <div class="error" id="error"></div>
+    <div id="results">
+        <!-- Search results will be dynamically added here -->
+    </div>
+
+    <script>
+        const pages = [
+            { title: 'Home', url: 'home.html' },
+            { title: 'About', url: 'about.html' },
+            { title: 'Contact', url: 'contact.html' },
+            { title: 'Articles', url: 'articles.html' },
+            // Add more pages as needed
+        ];
+
+        function searchPages(query) {
+            return pages.filter(page => page.title.toLowerCase().includes(query.toLowerCase()));
+        }
+
+        function renderResults(results) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = ''; // Clear previous results
+
+            if (results.length === 0) {
+                const noResultsDiv = document.createElement('div');
+                noResultsDiv.textContent = 'No pages found.';
+                resultsDiv.appendChild(noResultsDiv);
+            } else {
+                results.forEach(result => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.classList.add('result');
+                    resultDiv.innerHTML = `
+                        <h2>${result.title}</h2>
+                        <a href="${result.url}">${result.url}</a>
+                    `;
+                    resultsDiv.appendChild(resultDiv);
+                });
+            }
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const query = document.getElementById('query').value;
+
+            try {
+                loadingDiv.style.display = 'block';
+                errorDiv.textContent = '';
+
+                const results = searchPages(query);
+                renderResults(results);
+
+            } catch (error) {
+                console.error('Error:', error.message);
+                errorDiv.textContent = 'Failed to search pages. Please try again later.';
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

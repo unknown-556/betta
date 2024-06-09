@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Article</title>
+</head>
+<body>
+    <h1>Post a New Article</h1>
+    <form id="postArticleForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="content">Content:</label>
+        <textarea id="content" name="content" required></textarea><br><br>
+
+        <button type="submit">Post Article</button>
+    </form>
+
+    <script>
+        document.getElementById('postArticleForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+    
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const token = localStorage.getItem('token');
+    
+            if (!token) {
+                alert('Authentication required. Please login.');
+                return;
+            }
+    
+            try {
+                const response = await fetch('/api/betta/post/article', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ title, content })
+                });
+    
+                if (response.ok) {
+                    alert('Article posted successfully!');
+                    window.location.href = '/profile.html';
+                } else if (response.status === 403) {
+                    alert('You are not authorized to post articles. Only writers can post.');
+                } else {
+                    alert('An error occurred while posting the article.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An unexpected error occurred.');
+            }
+        });
+    </script>
+    
+</body>
+</html>
